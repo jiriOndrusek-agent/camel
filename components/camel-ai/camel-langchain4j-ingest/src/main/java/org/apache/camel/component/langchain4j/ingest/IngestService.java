@@ -16,15 +16,20 @@
  */
 package org.apache.camel.component.langchain4j.ingest;
 
+import java.util.Base64;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
+import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.message.AudioContent;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.embedding.request.EmbeddingRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import org.slf4j.Logger;
@@ -81,7 +86,18 @@ class IngestService {
         this.minDocumentSize = minDocumentSize;
     }
 
+    /** An audio pipeline: a document is embedded whole, so there is nothing to split or batch. */
+    public IngestService(String pipeline, EmbeddingStore<TextSegment> store, EmbeddingModel model,
+                         int maxDocumentSize, int minDocumentSize) {
+        this(pipeline, store, model, null, 1, maxDocumentSize, minDocumentSize);
+    }
+
     public IngestResult ingest(String documentId, String text) {
+        if (splitter == null) {
+            // the audio constructor: text has no splitter to go through
+            throw new IllegalStateException(
+                    "Ingestion pipeline '" + pipeline + "' is configured for audio and cannot ingest text");
+        }
         if (documentId == null || documentId.isBlank()) {
             throw new IllegalArgumentException("Ingestion pipeline '" + pipeline + "': documentId is required");
         }
@@ -129,6 +145,45 @@ class IngestService {
         LOG.debug("Ingestion pipeline '{}': wrote {} segment(s) of document '{}'", pipeline,
                 batching.segmentsEmbedded(), documentId);
         return new IngestResult(pipeline, documentId, batching.segmentsEmbedded(), IngestResult.Outcome.INGESTED);
+    }
+
+    /**
+     * Embeds an audio document whole, as one vector, and stores it with a placeholder segment: its text is the document
+     * id and it carries the same identity metadata as text segments, so retrieval cites it the same way. The size
+     * checks count bytes.
+     */
+    public IngestResult ingestAudio(String documentId, byte[] audio, String mimeType) {
+        if (documentId == null || documentId.isBlank()) {
+            throw new IllegalArgumentException("Ingestion pipeline '" + pipeline + "': documentId is required");
+        }
+        if (audio == null || audio.length == 0) {
+            return new IngestResult(pipeline, documentId, 0, IngestResult.Outcome.EMPTY);
+        }
+        if (minDocumentSize > 0 && audio.length < minDocumentSize) {
+            return new IngestResult(pipeline, documentId, 0, IngestResult.Outcome.FILTERED);
+        }
+        if (maxDocumentSize > 0 && audio.length > maxDocumentSize) {
+            throw new IllegalArgumentException(
+                    "Ingestion pipeline '" + pipeline + "': document '" + documentId + "' exceeds maxDocumentSize ("
+                                               + audio.length + " > " + maxDocumentSize + " bytes)");
+        }
+
+        Map<String, Object> identity = new LinkedHashMap<>();
+        identity.put(LangChain4jIngest.METADATA_PIPELINE, pipeline);
+        identity.put(LangChain4jIngest.METADATA_DOCUMENT_ID, documentId);
+
+        AudioContent content = AudioContent.from(Base64.getEncoder().encodeToString(audio), mimeType);
+        List<Embedding> embeddings = model.embed(EmbeddingRequest.builder().input(content).build()).embeddings();
+        if (embeddings == null || embeddings.size() != 1) {
+            throw new IllegalStateException(
+                    "Ingestion pipeline '" + pipeline + "': the embedding model returned "
+                                            + (embeddings == null ? 0 : embeddings.size())
+                                            + " embeddings for the single audio document '" + documentId + "'");
+        }
+        store.add(embeddings.get(0), TextSegment.from(documentId, Metadata.from(identity)));
+
+        LOG.debug("Ingestion pipeline '{}': wrote 1 audio vector of document '{}'", pipeline, documentId);
+        return new IngestResult(pipeline, documentId, 1, IngestResult.Outcome.INGESTED);
     }
 
     public String pipeline() {

@@ -134,6 +134,24 @@ public class LangChain4jIngestConfiguration implements Cloneable {
               label = "advanced")
     private IdempotentRepository idempotentRepository;
 
+    @UriParam(description = "What the message body is. text, the default, is read as a String, split into segments"
+                            + " and embedded segment by segment. audio is read as bytes and embedded whole, as one"
+                            + " vector, by an embedding model whose supportedContentTypes() include AUDIO - the"
+                            + " endpoint refuses to start with a text-only model. In audio mode the splitter options"
+                            + " and embeddingBatchSize do not apply, documentSplitter must not be set, and"
+                            + " maxDocumentSize and minDocumentSize count bytes.",
+              defaultValue = "TEXT")
+    private IngestModality modality = IngestModality.TEXT;
+
+    @UriParam(description = "MIME type of an audio body, such as audio/wav, handed to the embedding model;"
+                            + " parameters after a semicolon are dropped. When not set, it is derived from the"
+                            + " document id's file extension: wav, mp3, flac, ogg, m4a and aac; a document whose"
+                            + " type cannot be determined fails the exchange, before its dedup claim and before its"
+                            + " body is read. Only valid with modality=audio - with modality=text the endpoint"
+                            + " refuses to start, the option being a sign that modality=audio was forgotten.",
+              label = "advanced")
+    private String contentType;
+
     public EmbeddingStore<TextSegment> getEmbeddingStore() {
         return embeddingStore;
     }
@@ -275,6 +293,28 @@ public class LangChain4jIngestConfiguration implements Cloneable {
      */
     public void setIdempotentRepository(IdempotentRepository idempotentRepository) {
         this.idempotentRepository = idempotentRepository;
+    }
+
+    public IngestModality getModality() {
+        return modality;
+    }
+
+    /**
+     * Sets what the message body is: text, split and embedded segment by segment, or audio, embedded whole.
+     */
+    public void setModality(IngestModality modality) {
+        this.modality = modality;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    /**
+     * Sets the MIME type of an audio body; when not set, it is derived from the document id's file extension.
+     */
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
     // ************************

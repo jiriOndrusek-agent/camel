@@ -196,6 +196,39 @@ memory- and CPU-expensive and a small file can still parse into a lot of text. A
 document fails the exchange like any other error (see below) and releases its dedup claim, so
 a trimmed re-delivery under the same id still ingests.
 
+=== Ingesting audio
+
+With `modality=audio` the body is read as bytes and embedded whole, as one vector, by an
+embedding model whose `supportedContentTypes()` include `AUDIO` — the endpoint refuses to
+start with a text-only model. The vector is stored with a placeholder segment whose text is
+the document id, stamped with the same identity metadata as text segments, so retrieval and
+citation work unchanged. Nothing is split: `maxSegmentSize`, `maxOverlapSize` and
+`embeddingBatchSize` do not apply (and are not validated), a configured `documentSplitter`
+fails the start, and `maxDocumentSize` and `minDocumentSize` count bytes.
+
+[source,java]
+----
+from("file:/var/data/music?noop=true&recursive=true&readLock=changed&antInclude=**/*.wav")
+    .to("langchain4j-ingest:music?modality=audio&documentIdHeader=CamelFileName");
+----
+
+The MIME type handed to the model comes from the `contentType` option (parameters after a
+semicolon are dropped) or, when unset, from the document id's file extension: wav, mp3,
+flac, ogg, m4a and aac. Message headers such as `CamelFileContentType` or a consumer's
+content-type header are never consulted — the type is decided by the endpoint or the id, not
+by a consumer-delivered value. A document whose type cannot be determined fails the exchange
+before its dedup claim and before its body is read. Setting `contentType` with
+`modality=text` fails the start: the option is then a sign that `modality=audio` was
+forgotten, and silently embedding audio bytes as text would be worse than an error.
+
+No LangChain4j provider embeds audio out of the box yet, so the `EmbeddingModel` bean is
+typically a custom one calling an audio embedding service (a Wav2Vec2 or CLAP model, say);
+the same bean embeds the query clip at retrieval time. Do not attach an
+`EmbeddingModelListener` to that model: current LangChain4j (1.20) builds the listener
+context from the input text, which an audio-only input lacks, and fails the request with
+"text cannot be null or blank". Audio files are large and the base64 encoding adds a third, so set
+`maxDocumentSize` against the model's request limit.
+
 === When ingestion fails
 
 A failure while splitting, embedding or storing — a rate-limited model, an unreachable store —
