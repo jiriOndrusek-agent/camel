@@ -236,8 +236,14 @@ public class McpServerBridge extends ServiceSupport implements CamelContextAware
                         spec.getName());
                 return;
             }
+            try {
+                engine.toolAdded(createTool(spec));
+            } catch (McpServerRefusedException e) {
+                LOG.error("Refusing to expose MCP tool '{}': {}", spec.getName(), e.getMessage(), e.getCause());
+                return;
+            }
+            // track only what the engine accepted: a refused name stays free and is never passed to toolRemoved
             published.put(spec.getName(), spec);
-            engine.toolAdded(createTool(spec));
         } finally {
             lock.unlock();
         }
@@ -284,8 +290,13 @@ public class McpServerBridge extends ServiceSupport implements CamelContextAware
                 }
                 return;
             }
+            try {
+                engine.resourceAdded(createResource(spec));
+            } catch (McpServerRefusedException e) {
+                LOG.error("Refusing to expose MCP resource '{}': {}", spec.getUri(), e.getMessage(), e.getCause());
+                return;
+            }
             publishedResources.put(spec.getUri(), spec);
-            engine.resourceAdded(createResource(spec));
         } finally {
             lock.unlock();
         }
