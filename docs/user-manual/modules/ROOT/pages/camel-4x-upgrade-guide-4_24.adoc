@@ -3550,3 +3550,10 @@ producer only, and the catalog now describes the body that the webhook route get
 the YAML DSL validator and the Endpoint DSL, now accept a whatsapp endpoint as a consumer, and the Endpoint DSL builder
 of whatsapp gets the consumer options `bridgeErrorHandler`, `exceptionHandler` and `exchangePattern`. A whatsapp
 endpoint used directly in `from` still fails at startup: wrap it with the webhook component, as before.
+
+=== camel-jpa - a TransactionStrategy in the registry is used by default
+
+When no `TransactionStrategy` is configured, the JPA component and endpoint now use the single `TransactionStrategy`
+bean in the registry, if there is one, before creating the Spring based `DefaultTransactionStrategy`. Without such a
+bean nothing changes. The return type of the protected method `JpaEndpoint.createTransactionStrategy()` is now
+`TransactionStrategy` instead of `DefaultTransactionStrategy`.
