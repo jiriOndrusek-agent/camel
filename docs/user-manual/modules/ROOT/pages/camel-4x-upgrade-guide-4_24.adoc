@@ -3591,3 +3591,9 @@ Use `0.0.0.0` as the host to accept connections on all network interfaces.
 
 `AvroRpcHttpServerFactory` has a new method `create(SpecificResponder, String, int)` that receives the host. A custom factory should implement it.
 
+=== camel-jpa - a TransactionStrategy in the registry is used by default
+
+When no `TransactionStrategy` is configured, the JPA component and endpoint now use the single `TransactionStrategy`
+bean in the registry, if there is one, before creating the Spring based `DefaultTransactionStrategy`. Without such a
+bean nothing changes. The return type of the protected method `JpaEndpoint.createTransactionStrategy()` is now
+`TransactionStrategy` instead of `DefaultTransactionStrategy`.
