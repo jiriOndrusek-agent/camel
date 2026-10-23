@@ -2598,3 +2598,10 @@ With `crossOriginFilterOn=true`, the CORS responses now include `Access-Control-
 has an entry with a wildcard such as `https://*` or an entry `null`, the origin is still allowed, but without credentials. Previously credentials
 were allowed for every origin. A cross-origin client that sends cookies or other credentials must have its origin
 listed in `allowedOrigins`.
+
+=== camel-jpa - a TransactionStrategy in the registry is used by default
+
+When no `TransactionStrategy` is configured, the JPA component and endpoint now use the single `TransactionStrategy`
+bean in the registry, if there is one, before creating the Spring based `DefaultTransactionStrategy`. Without such a
+bean nothing changes. The return type of the protected method `JpaEndpoint.createTransactionStrategy()` is now
+`TransactionStrategy` instead of `DefaultTransactionStrategy`.
