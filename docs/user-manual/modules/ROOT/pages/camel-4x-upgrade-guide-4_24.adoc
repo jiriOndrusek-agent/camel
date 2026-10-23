@@ -4132,3 +4132,10 @@ number of unconfirmed entries, which are discarded with the log. Replaying the w
 consumer resume from an older offset. A log that rolled over and was cut short because the system stopped while the
 log rewrote itself after the roll-over holds fewer entries and is replayed: the last entry of a key in it can then be
 an older offset, so the consumer can process again the messages after that offset.
+
+=== camel-jpa - a TransactionStrategy in the registry is used by default
+
+When no `TransactionStrategy` is configured, the JPA component and endpoint now use the single `TransactionStrategy`
+bean in the registry, if there is one, before creating the Spring based `DefaultTransactionStrategy`. Without such a
+bean nothing changes. The return type of the protected method `JpaEndpoint.createTransactionStrategy()` is now
+`TransactionStrategy` instead of `DefaultTransactionStrategy`.
