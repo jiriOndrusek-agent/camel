@@ -258,11 +258,14 @@ public final class BlobConstants {
               javaType = "Long")
     public static final String DOWNLOAD_LINK_EXPIRATION = HEADER_PREFIX + "DownloadLinkExpiration";
     @Metadata(label = "producer",
-              description = "(copyBlob) The source blob account name to be used as source account name in a copy blob operation",
+              description = "(copyBlob) The source blob account name to be used as source account name in a copy blob operation."
+                            + " It must have 3 to 24 lowercase letters or digits",
               javaType = "String")
     public static final String SOURCE_BLOB_ACCOUNT_NAME = HEADER_PREFIX + "SourceBlobAccountName";
     @Metadata(label = "producer",
-              description = "(copyBlob) The source blob container name to be used as source container name in a copy blob operation",
+              description = "(copyBlob) The source blob container name to be used as source container name in a copy blob operation."
+                            + " It must have 3 to 63 lowercase letters, digits or single hyphens, and start and end with"
+                            + " a letter or digit ($root and $web are accepted too)",
               javaType = "String")
     public static final String SOURCE_BLOB_CONTAINER_NAME = HEADER_PREFIX + "SourceBlobContainerName";
     public static final String DESTINATION_BLOB_NAME = HEADER_PREFIX + "DestinationBlobContainerName";

@@ -4314,7 +4314,8 @@ public interface BlobEndpointBuilderFactory {
         }
         /**
          * (copyBlob) The source blob account name to be used as source account
-         * name in a copy blob operation.
+         * name in a copy blob operation. It must have 3 to 24 lowercase letters
+         * or digits.
          * 
          * The option is a: {@code String} type.
          * 
@@ -4328,7 +4329,9 @@ public interface BlobEndpointBuilderFactory {
         }
         /**
          * (copyBlob) The source blob container name to be used as source
-         * container name in a copy blob operation.
+         * container name in a copy blob operation. It must have 3 to 63
+         * lowercase letters, digits or single hyphens, and start and end with a
+         * letter or digit ($root and $web are accepted too).
          * 
          * The option is a: {@code String} type.
          * 

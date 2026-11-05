@@ -332,7 +332,10 @@ and change the `operation` parameter.
 [[copyBlob]]
 === copyBlob
 
-To copy a blob between containers (or across accounts), set the source container and account via headers:
+To copy a blob between containers (or across accounts), set the source container and account via headers.
+The source account name must have 3 to 24 lowercase letters or digits. The source container name must have 3 to 63
+lowercase letters, digits or single hyphens, and start and end with a letter or digit (`$root` and `$web` are accepted
+too). Other values fail the exchange with an `IllegalArgumentException` before the service is called.
 
 [tabs]
 ====
