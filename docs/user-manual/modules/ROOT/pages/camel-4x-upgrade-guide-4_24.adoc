@@ -865,6 +865,11 @@ closed that client for every other endpoint.
 Camel now closes only the clients it created. A client set with `amazonKinesisClient` or `amazonKinesisAsyncClient`, on
 the component or on an endpoint, is no longer closed when Camel stops: close it yourself when you no longer need it.
 
+=== camel-azure-storage-blob - copyBlob validates the source account and container name
+
+`copyBlob` now rejects invalid source account or container names (headers `CamelAzureStorageBlobSourceBlobAccountName`
+and `CamelAzureStorageBlobSourceBlobContainerName`) with an `IllegalArgumentException`.
+
 === camel-stitch - a response with an empty body, and the default sequence of a message
 
 A response of Stitch with an empty body now sets the `CamelStitchCode`, `CamelStitchStatus` and `CamelStitchHeaders`
