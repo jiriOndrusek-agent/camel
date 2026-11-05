@@ -693,6 +693,11 @@ auto-mock names, tracing and metrics are the same as before.
 Two routes that consume from the same address with different endpoint options are no longer rejected at startup as
 "Multiple consumers for the same endpoint is not allowed". Use one consumer per address.
 
+=== camel-azure-storage-blob - copyBlob validates the source account and container name
+
+`copyBlob` now rejects invalid source account or container names (headers `CamelAzureStorageBlobSourceBlobAccountName`
+and `CamelAzureStorageBlobSourceBlobContainerName`) with an `IllegalArgumentException`.
+
 == Upgrading from 4.18.4 to 4.18.5
 
 === camel-azure-eventhubs
