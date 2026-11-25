@@ -309,8 +309,31 @@ abstract class Exporter {
      */
     protected final Set<String> resolveDependencies(Path settings, Path profile) throws Exception {
         Set<String> answer = doResolveDependencies(settings, profile);
+        removePluginDependencies(answer);
         removeDuplicateDependencies(answer);
         return answer;
+    }
+
+    /**
+     * Removes the dependencies the plugins ask to remove (by groupId:artifactId), after all dependencies are collected.
+     */
+    private void removePluginDependencies(Set<String> answer) {
+        if (request.skipPlugins) {
+            return;
+        }
+        Set<String> toBeRemoved = new HashSet<>();
+        for (PluginExporter exporter : pluginExporters()) {
+            for (String d : exporter.getDependenciesToRemove(request.runtime)) {
+                MavenGav gav = MavenGav.parseGav(d);
+                toBeRemoved.add(gav.getGroupId() + ":" + gav.getArtifactId());
+            }
+        }
+        if (!toBeRemoved.isEmpty()) {
+            answer.removeIf(d -> {
+                MavenGav gav = MavenGav.parseGav(d);
+                return toBeRemoved.contains(gav.getGroupId() + ":" + gav.getArtifactId());
+            });
+        }
     }
 
     /**

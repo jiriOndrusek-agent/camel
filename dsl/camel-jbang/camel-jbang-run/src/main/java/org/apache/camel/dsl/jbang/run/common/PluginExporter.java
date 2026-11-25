@@ -48,6 +48,18 @@ public interface PluginExporter {
     }
 
     /**
+     * Provide dependencies to remove from the exported project, in Maven format (groupId:artifactId). They are removed
+     * after all plugins have added their dependencies, and before the project files are generated, whatever notation
+     * and version the collected dependency uses. A dependency that is not present is ignored.
+     *
+     * @param  runtimeType Type of runtime (defined by parameter --runtime)
+     * @return             set of Maven groupId:artifactId.
+     */
+    default Set<String> getDependenciesToRemove(RuntimeType runtimeType) {
+        return Collections.emptySet();
+    }
+
+    /**
      * Checks if the plugin exporter should perform. Implementations may add explicit logic to determine if the plugin
      * exporter should be skipped.
      *
